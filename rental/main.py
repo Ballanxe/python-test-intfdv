@@ -3,7 +3,7 @@ import datetime
 
 class BikeRental:
 	"""
-	
+	Contiene todos los datos del modelo de negocios
 	"""
 
 	total_number_of_rents = 0
@@ -15,6 +15,10 @@ class BikeRental:
 
 	def rent(self, name=None, type=None):
 
+		"""
+		Renta un bicicleta con base a las propiedades de la clase 
+		"""
+
 		rent = Rent(name, type)
 
 		self.__class__.total_number_of_rents += 1
@@ -23,6 +27,10 @@ class BikeRental:
 
 
 	def family_rent(name=None, type=None):
+		"""
+		Crea una promocion Family rent, que permite descuento a partir de 3 rentas
+		por familia 
+		"""
 
 		family = FamilyRental(name, type)
 
@@ -30,6 +38,10 @@ class BikeRental:
 
 	@classmethod
 	def total_rents(cls):
+
+		"""
+		Retorna el numero de veces que se ha instanciado una clase Rent
+		"""
 
 		return cls.total_number_of_rents
 
@@ -45,7 +57,6 @@ class Rent(BikeRental):
 
 
 	def __init__(self, client, type):
-
 
 
 		self.client = client
@@ -64,6 +75,9 @@ class Rent(BikeRental):
 
 
 	def __check_type(self, type):
+		"""
+		Verifica que no haya errores en el tipo de arrendmiento
+		"""
 
 		if type not in super().types: 
 
@@ -73,6 +87,10 @@ class Rent(BikeRental):
 
 
 	def get_type_of_billing(self):
+
+		"""
+		Retorna la funcion adecuada al tipo de arrendamiento
+		"""
 
 		if self.type == "hour":
 
@@ -88,6 +106,10 @@ class Rent(BikeRental):
 
 
 	def __get_total_hours_price(self, end_date=None):
+
+		"""
+		Retorna el precio si el tipo de arrendamiento es por hora
+		"""
 
 		if not end_date:
 
@@ -108,6 +130,9 @@ class Rent(BikeRental):
 		return self.price 
 
 	def __get_total_days_price(self, end_date=None):
+		"""
+		Retorna el precio si el tipo de arrendamiento es por dia
+		"""
 
 		if not end_date:
 
@@ -130,6 +155,9 @@ class Rent(BikeRental):
 		return self.price
 
 	def __get_total_weeks_price(self, end_date=None):
+		"""
+		Retorna el precio si el tipo de arrendamiento es por semana
+		"""
 
 		if not end_date:
 
@@ -154,6 +182,9 @@ class Rent(BikeRental):
 
 
 	def _get_days(self, seconds):
+		"""
+		convierte segundos en dias
+		"""
 
 		days = seconds / 86400 
 
@@ -165,6 +196,9 @@ class Rent(BikeRental):
 
 
 	def _get_hours(self, seconds):
+		"""
+		Convierte segundos en horas
+		"""
 
 		hours = seconds / 3600 
 
@@ -178,6 +212,10 @@ class Rent(BikeRental):
 
 	def _get_weeks(self, seconds):
 
+		"""
+		Convierte segundos en semanas
+		"""
+
 
 		weeks = seconds / 604800
 
@@ -190,15 +228,11 @@ class Rent(BikeRental):
 
 
 
-# # self.__class__.class_variable
-
-# # instance.__class__.class_variable
-
-
 class FamilyRental(BikeRental): 
 
 
 	allowed_relations = ["daugther", "son", "husband", "wife", "grandchildren", "grandfather", "uncle"]
+	discount = 0.3
 
 
 	def __init__(self, representant, family_members):
@@ -210,6 +244,10 @@ class FamilyRental(BikeRental):
 
 
 	def rent(self, member, type):
+
+		"""
+		Agrega un nuevo arrendamiento a la promocion
+		"""
 
 		if len(self.rent_list) == 5:
 
@@ -224,6 +262,10 @@ class FamilyRental(BikeRental):
 		return new_rent
 
 	def _check_member(self, member):
+		"""
+		Valida que el miembro que solicita el arrendamiento pertenece a la lista
+		de parientes del representante
+		"""
 
 		if len(self.family_members) == 0:
 
@@ -242,10 +284,18 @@ class FamilyRental(BikeRental):
 
 	def append_family(self, name, relation):
 
+		"""
+		Agrega un nuevuo miembro a la lista de parientes autorizados en la promocion
+		"""
+
 		self.family_members.append((name, relation))
 
 
-	def get_family_rent_price(self, id, end_date=None):
+	def return_bike(self, rent, end_date=None):
+		"""
+		Regresa una bicileta de la promocion
+
+		"""
 
 		if not end_date:
 
@@ -256,59 +306,51 @@ class FamilyRental(BikeRental):
 			raise ValueError("Return date must be a datetime object")
 
 
-		for obj in self.rent_list:
+		if rent.id in [obj.id for obj in self.rent_list]:
 
-			if id == obj.id:
+			price = rent.get_price(end_date)
 
-				obj.get_price(end_date)
+			self.total_price += price
 
-			else:
+			
+		else:
 
-				raise ValueError("Invalid ID")
+			return ValueError("Invalid ID") 
 
 
 
 	def get_promotion_price(self):
 
-		for item.price in self.rent_list:
+		if len(self.rent_list) < 3:
+
+			raise ValueError("You need at least 3 rents to get discount")
+
+		else:
+
+			if self.check_devolutions(): 
+
+				total_price = sum(item.price for item in self.rent_list)
+
+			else:
+
+				raise ValueError("This promotion has no returned bikes")
+
+
+		promotion_price = total_price - (total_price * self.__class__.discount)
+
+		return promotion_price
+
+
+
+	def check_devolutions(self):
+
+		for item in self.rent_list:
 
 			if item.price == 0:
 
+				return False 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# if __name__ == "__main__":
-
-
-# 	rent = Rent(client="Alberto", type="hour")
-
-
-
-
-# 	rent.get_price()
-
+		return True
 
 
 
@@ -343,13 +385,32 @@ family_members = [
 
 family_rent = FamilyRental(representant="Alberto", family_members=family_members)
 
-family_rent.rent("Argenis", "hour")
-family_rent.rent("Olga", "day")
-family_rent.rent("Argenis", "week")
-family_rent.rent("Alberto", "day")
-family_rent.rent("Olga", "hour")
+rent = family_rent.rent("Argenis", "hour")
+end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+family_rent.return_bike(rent, end_date)
 
-family_rent.append_family("Mauricio", "brother")
+
+rent = family_rent.rent("Olga", "day")
+end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+family_rent.return_bike(rent, end_date)
+
+
+rent = family_rent.rent("Argenis", "week")
+end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+family_rent.return_bike(rent, end_date)
+
+
+rent = family_rent.rent("Alberto", "day")
+end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+family_rent.return_bike(rent, end_date)
+
+# rent = family_rent.rent("Olga", "hour")
+# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+# family_rent.return_bike(rent, end_date)
+
+promotion_price = family_rent.get_promotion_price()
+
+print("promotion price ", promotion_price)
 
 
 print(family_rent.__dict__)
