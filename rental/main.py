@@ -8,6 +8,7 @@ class BikeRental:
     """
 
     total_number_of_rents = 0
+    total_number_of_promotions = 0
     types = ["hours", "days", "weeks"]
     hour_price = 5
     day_price = 20
@@ -32,6 +33,13 @@ class BikeRental:
         Crea una promocion Family rent, que permite descuento a partir de 3 rentas
         por familia 
         """
+
+        if type(family_members) != list:
+
+            raise ValueError("Invalid family_member format")
+
+        self.__class__.total_number_of_promotions += 1
+
         return FamilyRental(name, family_members)
 
 
@@ -43,6 +51,15 @@ class BikeRental:
         """
 
         return cls.total_number_of_rents
+
+    @classmethod
+    def total_promotion(cls):
+
+        """
+        Retorna el numero de veces que se ha instanciado una clase Rent
+        """
+
+        return cls.total_number_of_promotions
 
 
 
@@ -264,7 +281,7 @@ class FamilyRental(BikeRental):
     discount = 0.3
 
 
-    def __init__(self, representant, family_members):
+    def __init__(self, representant, family_members=[]):
 
         self.representant = representant
         self.rent_list = []
@@ -388,68 +405,6 @@ class FamilyRental(BikeRental):
 
         return True
 
-
-
-
-
-# bike_rental = BikeRental()
-
-# new_rent = bike_rental.rent("Alberto", "weeks")
-
-
-# print(new_rent.__dict__)
-
-
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# price = new_rent.get_price(end_date)
-
-# print(bike_rental.total_rents())
-
-# print(price)
-
-# print(new_rent)
-
-# print("-------------")
-
-
-# family_members = [
-#   ("Carlos", "brother"),
-#   ("Olga", "mother"),
-#   ("Argenis", "father")
-
-# ]
-
-# family_rent = FamilyRental(representant="Alberto", family_members=family_members)
-
-# rent = family_rent.rent("Argenis", "hous")
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# family_rent.return_bike(rent, end_date)
-
-
-# rent = family_rent.rent("Olga", "days")
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# family_rent.return_bike(rent, end_date)
-
-
-# rent = family_rent.rent("Argenis", "weeks")
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# family_rent.return_bike(rent, end_date)
-
-
-# rent = family_rent.rent("Alberto", "days")
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# family_rent.return_bike(rent, end_date)
-
-# rent = family_rent.rent("Olga", "hours")
-# end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-# family_rent.return_bike(rent, end_date)
-
-# promotion_price = family_rent.get_promotion_price()
-
-#     print("promotion price ", promotion_price)
-
-
-# print(family_rent.__dict__)
 
 
 class Test(unittest.TestCase):
@@ -628,6 +583,69 @@ class Test(unittest.TestCase):
         self.assertEqual(alberto_rent.client, "Alberto")
         self.assertEqual(alberto_rent.type, "days")
         self.assertEqual(len(family_rent.rent_list), 1)
+
+
+    def test_rent_by_a_family_member(self):
+
+
+        representant = "Alberto"
+        family_members = [
+            ("Carlos", "brother"),
+            ("Olga", "mother"),
+            ("Argenis", "father")
+
+        ]
+
+        bike_rental = BikeRental()      
+
+        family_rent = bike_rental.family_rent(representant, family_members)
+
+        alberto_rent = family_rent.rent("Carlos", "days")
+
+        self.assertIsInstance(alberto_rent, Rent)
+        self.assertEqual(alberto_rent.client, "Carlos")
+        self.assertEqual(alberto_rent.type, "days")
+        self.assertEqual(len(family_rent.rent_list), 1)
+        self.assertEqual(family_rent.rent_list[0].client, "Carlos")
+
+
+    def test_full_family_promotion(self):
+
+        representant = "Alberto"
+        family_members = [
+            ("Carlos", "brother"),
+            ("Olga", "mother"),
+            ("Argenis", "father")
+
+        ]
+
+        bike_rental = BikeRental()      
+        family_rent = bike_rental.family_rent(representant, family_members)
+
+        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        carlos_rent = family_rent.rent("Carlos", "days")
+
+        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        olga_rent = family_rent.rent("Olga", "hours")
+
+        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        argenis_rent = family_rent.rent("Argenis", "weeks")
+
+        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        alberto_rent = family_rent.rent("Alberto", "hours")
+
+        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
+        olga_rent = family_rent.rent("Olga", "days")
+
+
+
+
+
 
 
 
