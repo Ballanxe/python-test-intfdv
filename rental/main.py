@@ -72,7 +72,7 @@ class Rent(BikeRental):
     total_hours_rented = 0
 
 
-    def __init__(self, client, type, date=None):
+    def __init__(self, client, type, start_date=None):
 
 
         self.client = client
@@ -84,18 +84,24 @@ class Rent(BikeRental):
         self.price = 0
         self.__class__.total_rented += 1 
         self.id = self.__class__.total_rented
-        self.get_start_date(date)
-        self.get_type_of_billing()
+        self._get_start_date(start_date)
+        self._get_type_of_billing()
 
 
     def __repr__(self):
 
         return f"<{self.__class__.__name__}({self.id}), {self.client},  $ {self.price} >"
 
+    def get_id(self):
+
+        return self.id
 
     def get_usetime(self):
+        """
+        Retorna el tiempo de uso dependiendo del valor de self.type
+        """
 
-        return f"{self.usetime} {self.type}"
+        return self.usetime
 
 
     def _check_type(self, type):
@@ -110,7 +116,7 @@ class Rent(BikeRental):
         return type
 
 
-    def get_start_date(self, date):
+    def _get_start_date(self, date):
 
         """
         Obtiene la fecha si es proporcionada de lo contrario agrega la fecha actual
@@ -132,7 +138,7 @@ class Rent(BikeRental):
 
 
 
-    def get_type_of_billing(self):
+    def _get_type_of_billing(self):
 
         """
         Retorna la funcion adecuada al tipo de arrendamiento
@@ -169,7 +175,7 @@ class Rent(BikeRental):
 
         self.usetime = self._get_hours(total_time.total_seconds())
         
-        print("Total hours are ", self.usetime)
+        # print("Total hours are ", self.usetime)
 
         self.price = self.usetime * self.hour_price
 
@@ -190,11 +196,11 @@ class Rent(BikeRental):
 
         total_time = end_date - self.start_date
 
-        print(total_time.total_seconds())
+        # print(total_time.total_seconds())
 
         self.usetime = self._get_days(total_time.total_seconds())
 
-        print("Total days are ", self.usetime)
+        # print("Total days are ", self.usetime)
 
         self.price = round(self.usetime * self.day_price, 2)
 
@@ -216,11 +222,11 @@ class Rent(BikeRental):
 
         total_time = end_date - self.start_date
 
-        print(total_time.total_seconds())
+        # print(total_time.total_seconds())
 
         self.usetime = self._get_weeks(total_time.total_seconds())
 
-        print("Total weeks are ", self.usetime)
+        # print("Total weeks are ", self.usetime)
 
         self.price = self.usetime * self.week_price
 
@@ -278,7 +284,7 @@ class FamilyRental(BikeRental):
 
 
     allowed_relations = ["daugther", "son", "husband", "wife", "grandchildren", "grandfather", "uncle"]
-    discount = 0.3
+    DISCOUNT = 0.3
 
 
     def __init__(self, representant, family_members=[]):
@@ -286,10 +292,24 @@ class FamilyRental(BikeRental):
         self.representant = representant
         self.rent_list = []
         self.family_members = family_members
-        self.total_price = 0
+        self.total_price = []
+
+    def __setattr__(self, name, value):
+
+        if name == 'DISCOUNT':
+
+            raise AttributeError('Protected attr.')
+        else:
+            object.__setattr__(self, name, value)
+
+    def __repr__(self):
+
+        return "<{}, {}>".format(self.__class__.__name__,self.rent_list.__repr__)
+
+    # def 
 
 
-    def rent(self, member, type):
+    def rent(self, member, type, start_date=None):
 
         """
         Agrega un nuevo arrendamiento a la promocion
@@ -301,7 +321,7 @@ class FamilyRental(BikeRental):
 
         if self._check_member(member):
 
-            new_rent = Rent(client=member, type=type)
+            new_rent = Rent(client=member, type=type, start_date=start_date)
 
             self.rent_list.append(new_rent)
 
@@ -354,20 +374,24 @@ class FamilyRental(BikeRental):
 
         if rent.id in [obj.id for obj in self.rent_list]:
 
-            price = rent.get_price(end_date)
+            # print([obj.id for obj in self.rent_list])
 
-            self.total_price += price
+            price = rent.get_price(end_date) 
+
+            self.total_price.append(price)
 
             
         else:
 
-            return ValueError("Invalid ID") 
+            raise ValueError("Invalid ID") 
+
+        return self.total_price
 
 
 
     def get_promotion_price(self):
         """
-        Suma todos los arrendamientos de la promocion y agrega el descuento correspondiente 
+        Suma todos los arriendos de la promocion y agrega el descuento correspondiente 
         """
 
         if len(self.rent_list) < 3:
@@ -376,22 +400,26 @@ class FamilyRental(BikeRental):
 
         else:
 
-            if self.check_devolutions(): 
+            if self._has_non_returned_bikes(): 
 
-                total_price = sum(item.price for item in self.rent_list)
+                total_price = sum(self.total_price)
 
             else:
 
                 raise ValueError("This promotion has no returned bikes")
 
 
-        promotion_price = total_price - (total_price * self.__class__.discount)
+        promotion_price = total_price - (total_price * self.__class__.DISCOUNT)
 
         return promotion_price
+    
+    def get_total_price(self):
+
+        return sum(self.total_price)
 
 
 
-    def check_devolutions(self):
+    def _has_non_returned_bikes(self):
 
         """
         Verifica que la promosion no tenga bicicletas sin devolver
@@ -401,324 +429,8 @@ class FamilyRental(BikeRental):
 
             if item.price == 0:
 
-                return False 
+                return False  
 
         return True
 
 
-
-class Test(unittest.TestCase):
-
-    def test_bike_rental_rent(self):
-
-        client = 'Alberto'
-        type_ = "hours"
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_)
-
-
-
-        self.assertEqual(new_rent.client, "Alberto")
-        self.assertTrue(new_rent.start_date)
-        self.assertIsInstance(new_rent.start_date, datetime.datetime)
-        self.assertEqual(new_rent.type, "hours")
-        self.assertEqual(new_rent.get_price, new_rent._get_total_hours_price)
-        self.assertEqual(new_rent.price, 0)
-        # self.assertEqual(new_rent.total_rented, 1)
-
-    def test_bike_rental_by_day(self):
-
-        client = 'Carlos'
-        type_ = "days"
-        start_date = datetime.datetime(2019, 3, 3, 2, 45)
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_, start_date)
-
-        end_date = datetime.datetime(2019, 3, 4, 2, 46)
-
-        total_price = new_rent.get_price(end_date)
-
-        usetime = new_rent.get_usetime()
-
-
-        self.assertEqual(total_price, 40)
-        self.assertEqual(new_rent.usetime, 2)
-        self.assertEqual(new_rent.start_date, start_date)
-
-    def test_bike_rental_by_day_one_minute_left(self):
-
-        client = "Raul"
-        type="days"
-
-        start_date = datetime.datetime(2019, 3, 3, 4, 20)
-
-        bike_rental = BikeRental()
-
-        new_rent = bike_rental.rent(client, type, start_date)
-
-        end_date = datetime.datetime(2019, 3, 4, 4, 19)
-
-        total_price = new_rent.get_price(end_date)
-
-        self.assertEqual(total_price, 20)
-
-
-    def test_bike_rental_by_hour(self):
-
-        client = 'Carlos'
-        type_ = "hours"
-        start_date = datetime.datetime(2019, 3, 3, 2, 30)
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_, start_date)
-
-        end_date = datetime.datetime(2019, 3, 3, 5, 30)
-
-        total_price = new_rent.get_price(end_date)
-
-        usetime = new_rent.get_usetime()
-
-        self.assertEqual(usetime, "3 hours")
-        self.assertEqual(total_price, 15)
-
-
-    def test_bike_rental_by_hour_one_minute_pass(self):
-
-        client = 'Carlos'
-        type_ = "hours"
-        start_date = datetime.datetime(2019, 3, 3, 2, 30)
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_, start_date)
-
-        end_date = datetime.datetime(2019, 3, 3, 5, 31)
-
-        total_price = new_rent.get_price(end_date)
-
-        usetime = new_rent.get_usetime()
-
-        self.assertEqual(usetime, "4 hours")
-        self.assertEqual(total_price, 20)
-
-
-
-    def test_bike_rental_by_week(self):
-
-        client = 'Carlos'
-        type_ = "weeks"
-        start_date = datetime.datetime(2019, 3, 3, 2, 30)
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_, start_date)
-
-        end_date = datetime.datetime(2019, 3, 10, 2, 29)
-
-        total_price = new_rent.get_price(end_date)
-
-        usetime = new_rent.get_usetime()
-
-        self.assertEqual(usetime, "1 weeks")
-        self.assertEqual(total_price, 60)
-
-
-    def test_bike_rental_by_week_one_minute_pass(self):
-
-        client = 'Carlos'
-        type_ = "weeks"
-        start_date = datetime.datetime(2019, 3, 3, 2, 30)
-
-        bike_rental = BikeRental()
-        new_rent = bike_rental.rent(client, type_, start_date)
-
-        end_date = datetime.datetime(2019, 3, 10, 2, 31)
-
-        total_price = new_rent.get_price(end_date)
-
-        usetime = new_rent.get_usetime()
-
-        self.assertEqual(usetime, "2 weeks")
-        self.assertEqual(total_price, 120)
-
-
-    def test_family_rental(self):
-
-        representant = "Alberto"
-        family_members = [
-            ("Carlos", "brother"),
-            ("Olga", "mother"),
-            ("Argenis", "father")
-
-        ]
-
-        bike_rental = BikeRental()      
-
-        family_rent = bike_rental.family_rent(representant, family_members)
-
-
-        self.assertEqual(family_rent.representant, "Alberto")
-        self.assertEqual(family_rent.rent_list, [])
-        self.assertEqual(family_rent.family_members, family_members)
-        self.assertEqual(family_rent.total_price, 0)
-
-    def test_rent_by_a_representant_member(self):
-
-
-        representant = "Alberto"
-        family_members = [
-            ("Carlos", "brother"),
-            ("Olga", "mother"),
-            ("Argenis", "father")
-
-        ]
-
-        bike_rental = BikeRental()      
-
-        family_rent = bike_rental.family_rent(representant, family_members)
-
-        alberto_rent = family_rent.rent(representant, "days")
-
-        self.assertIsInstance(alberto_rent, Rent)
-        self.assertEqual(alberto_rent.client, "Alberto")
-        self.assertEqual(alberto_rent.type, "days")
-        self.assertEqual(len(family_rent.rent_list), 1)
-
-
-    def test_rent_by_a_family_member(self):
-
-
-        representant = "Alberto"
-        family_members = [
-            ("Carlos", "brother"),
-            ("Olga", "mother"),
-            ("Argenis", "father")
-
-        ]
-
-        bike_rental = BikeRental()      
-
-        family_rent = bike_rental.family_rent(representant, family_members)
-
-        alberto_rent = family_rent.rent("Carlos", "days")
-
-        self.assertIsInstance(alberto_rent, Rent)
-        self.assertEqual(alberto_rent.client, "Carlos")
-        self.assertEqual(alberto_rent.type, "days")
-        self.assertEqual(len(family_rent.rent_list), 1)
-        self.assertEqual(family_rent.rent_list[0].client, "Carlos")
-
-
-    def test_full_family_promotion(self):
-
-        representant = "Alberto"
-        family_members = [
-            ("Carlos", "brother"),
-            ("Olga", "mother"),
-            ("Argenis", "father")
-
-        ]
-
-        bike_rental = BikeRental()      
-        family_rent = bike_rental.family_rent(representant, family_members)
-
-        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        carlos_rent = family_rent.rent("Carlos", "days")
-
-        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        olga_rent = family_rent.rent("Olga", "hours")
-
-        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        argenis_rent = family_rent.rent("Argenis", "weeks")
-
-        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        alberto_rent = family_rent.rent("Alberto", "hours")
-
-        start_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        end_date = datetime.datetime(2019, 3, 10, 21, 40, 42, 0)
-        olga_rent = family_rent.rent("Olga", "days")
-
-
-
-
-
-
-
-
-
-
-        # self.representant = representant
-        # self.rent_list = []
-        # self.family_members = family_members
-        # self.total_price = 0
-
-
-    # self.client = client
-    # self.start_date = datetime.datetime.now()
-    # self.end_date = None
-    # self.type = self.__check_type(type)
-    # self.get_price = self.get_type_of_billing()
-    # self.price = 0
-    # self.__class__.total_rented += 1 
-    # self.id = self.__class__.total_rented
-
-
-    # def test_longer_sentence(self):
-    #     input = 'Chocolate cake for dinner and pound cake for dessert'
-
-    #     word_cloud = WordCloudData(input)
-    #     actual = word_cloud.words_to_counts
-
-    #     expected = {
-    #         'and': 1,
-    #         'pound': 1,
-    #         'for': 2,
-    #         'dessert': 1,
-    #         'Chocolate': 1,
-    #         'dinner': 1,
-    #         'cake': 2,
-    #     }
-    #     self.assertEqual(actual, expected)
-
-    # def test_punctuation(self):
-    #     input = 'Strawberry short cake? Yum!'
-
-    #     word_cloud = WordCloudData(input)
-    #     actual = word_cloud.words_to_counts
-
-    #     expected = {'cake': 1, 'Strawberry': 1, 'short': 1, 'Yum': 1}
-    #     self.assertEqual(actual, expected)
-
-    # def test_hyphenated_words(self):
-    #     input = 'Dessert - mille-feuille cake'
-
-    #     word_cloud = WordCloudData(input)
-    #     actual = word_cloud.words_to_counts
-
-    #     expected = {'cake': 1, 'Dessert': 1, 'mille-feuille': 1}
-    #     self.assertEqual(actual, expected)
-
-    # def test_ellipses_between_words(self):
-    #     input = 'Mmm...mmm...decisions...decisions'
-
-    #     word_cloud = WordCloudData(input)
-    #     actual = word_cloud.words_to_counts
-
-    #     expected = {'mmm': 2, 'decisions': 2}
-    #     self.assertEqual(actual, expected)
-
-    # def test_apostrophes(self):
-    #     input = "Allie's Bakery: Sasha's Cakes"
-
-    #     word_cloud = WordCloudData(input)
-    #     actual = word_cloud.words_to_counts
-
-    #     expected = {"Bakery": 1, "Cakes": 1, "Allie's": 1, "Sasha's": 1}
-    #     self.assertEqual(actual, expected)
-
-
-unittest.main(verbosity=2)
