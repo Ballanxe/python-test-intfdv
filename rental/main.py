@@ -1,5 +1,5 @@
-import unittest 
 import datetime
+
 
 class BikeRental:
     """
@@ -14,23 +14,21 @@ class BikeRental:
 
     def rent(self, name=None, type=None, date=None):
         """
-        Renta un bicicleta con base a las propiedades de la clase 
+        Renta un bicicleta con base a las propiedades de la clase
         """
         rent = Rent(name, type, date)
         self.__class__.total_number_of_rents += 1
-        return rent 
-
+        return rent
 
     def family_rent(self, name=None, family_members=None):
         """
-        Crea una promocion Family rent, que permite descuento a partir de 3 rentas
-        por familia 
+        Crea una promocion Family rent, que permite descuento a
+        partir de 3 rentas por familia
         """
         if type(family_members) != list:
             raise ValueError("Invalid family_member format")
         self.__class__.total_number_of_promotions += 1
         return FamilyRental(name, family_members)
-
 
     @classmethod
     def total_rents(cls):
@@ -46,6 +44,7 @@ class BikeRental:
         """
         return cls.total_number_of_promotions
 
+
 class Rent(BikeRental):
 
     total_rented = 0
@@ -58,16 +57,17 @@ class Rent(BikeRental):
         self.end_date = None
         self.type = self._check_type(type)
         self.get_price = None
-        self.usetime = 0 
+        self.usetime = 0
         self.price = 0
-        self.__class__.total_rented += 1 
+        self.__class__.total_rented += 1
         self.id = self.__class__.total_rented
         self._get_start_date(start_date)
         self._get_type_of_billing()
 
     def __repr__(self):
 
-        return f"<{self.__class__.__name__}({self.id}), {self.client},  $ {self.price} >"
+        return f"<{self.__class__.__name__}({self.id}), \
+                 {self.client},  $ {self.price} >"
 
     def get_id(self):
 
@@ -79,21 +79,20 @@ class Rent(BikeRental):
         """
         return self.usetime
 
-
     def _check_type(self, type):
         """
         Verifica que no haya errores en el tipo de arrendmiento
         """
-        if type not in super().types: 
+        if type not in super().types:
 
             raise ValueError("Invalid type")
 
         return type
 
-
     def _get_start_date(self, date):
         """
-        Obtiene la fecha si es proporcionada de lo contrario agrega la fecha actual
+        Obtiene la fecha si es proporcionada de lo
+        contrario agrega la fecha actual
         """
         if date is not None:
 
@@ -102,12 +101,9 @@ class Rent(BikeRental):
             else:
 
                 raise ValueError("Start time has to be datetime instance")
-        else: 
+        else:
 
             self.start_date = datetime.datetime.now()
-
-
-
 
     def _get_type_of_billing(self):
         """
@@ -123,12 +119,11 @@ class Rent(BikeRental):
 
             self.get_price = self._get_total_weeks_price
 
-
     def _get_total_hours_price(self, end_date=None):
         """
         Retorna el precio si el tipo de arrendamiento es por hora
         """
-        if end_date == None:
+        if end_date is None:
 
             raise ValueError("Must enter return date")
 
@@ -139,13 +134,13 @@ class Rent(BikeRental):
         total_time = end_date - self.start_date
         self.usetime = self._get_hours(total_time.total_seconds())
         self.price = self.usetime * self.hour_price
-        return self.price 
+        return self.price
 
     def _get_total_days_price(self, end_date=None):
         """
         Retorna el precio si el tipo de arrendamiento es por dia
         """
-        if end_date == None:
+        if end_date is None:
 
             raise ValueError("Must enter return date")
         if not isinstance(end_date, datetime.datetime):
@@ -160,7 +155,7 @@ class Rent(BikeRental):
         """
         Retorna el precio si el tipo de arrendamiento es por semana
         """
-        if end_date == None:
+        if end_date is None:
 
             raise ValueError("Must enter return date")
 
@@ -170,24 +165,24 @@ class Rent(BikeRental):
         total_time = end_date - self.start_date
         self.usetime = self._get_weeks(total_time.total_seconds())
         self.price = self.usetime * self.week_price
-        return self.price 
+        return self.price
 
     def _get_days(self, seconds):
         """
         convierte segundos en dias
         """
-        days = seconds / 86400 
+        days = seconds / 86400
         if days % 1 != 0:
             days += 1
-        return int(days)  
+        return int(days)
 
     def _get_hours(self, seconds):
         """
         Convierte segundos en horas
         """
-        hours = seconds / 3600 
+        hours = seconds / 3600
         if hours % 1 != 0:
-            hours += 1 
+            hours += 1
         return int(hours)
 
     def _get_weeks(self, seconds):
@@ -195,17 +190,23 @@ class Rent(BikeRental):
         Convierte segundos en semanas
         """
         weeks = seconds / 604800
-        if weeks % 1 != 0: 
+        if weeks % 1 != 0:
             weeks += 1
 
         return int(weeks)
 
 
+class FamilyRental(BikeRental):
 
-
-class FamilyRental(BikeRental): 
-
-    allowed_relations = ["daugther", "son", "husband", "wife", "grandchildren", "grandfather", "uncle"]
+    allowed_relations = [
+        "daugther",
+        "son",
+        "husband",
+        "wife",
+        "grandchildren",
+        "grandfather",
+        "uncle"
+    ]
     DISCOUNT = 0.3
 
     def __init__(self, representant, family_members=[]):
@@ -224,8 +225,8 @@ class FamilyRental(BikeRental):
 
     def __repr__(self):
 
-        return "<{}, {}>".format(self.__class__.__name__,self.rent_list.__repr__)
-
+        return "<{}, {}>".format(self.__class__.__name__,
+                                 self.rent_list.__repr__)
 
     def rent(self, member, type, start_date=None):
         """
@@ -244,31 +245,31 @@ class FamilyRental(BikeRental):
 
     def _check_member(self, member):
         """
-        Valida que el miembro que solicita el arrendamiento pertenece a la lista
-        de parientes del representante
+        Valida que el miembro que solicita el arrendamiento
+        pertenece a la lista de parientes del representante
         """
         if member == self.representant:
 
-            return True 
-        if not member in [item[0] for item in self.family_members]:
+            return True
+        if member not in [item[0] for item in self.family_members]:
 
             raise ValueError("Invalid Member")
 
-        return True 
+        return True
 
     def append_family(self, name, relation):
         """
-        Agrega un nuevuo miembro a la lista de parientes autorizados en la promocion
+        Agrega un nuevuo miembro a la lista de parientes
+        autorizados en la promocion
         """
         self.family_members.append((name, relation))
-
 
     def return_bike(self, rent, end_date=None):
         """
         Regresa una bicileta de la promocion
 
         """
-        if end_date == None:
+        if end_date is None:
 
             raise ValueError("Must enter return date")
         if not isinstance(end_date, datetime.datetime):
@@ -276,19 +277,17 @@ class FamilyRental(BikeRental):
             raise ValueError("Return date must be a datetime object")
         if rent.id in [obj.id for obj in self.rent_list]:
 
-            price = rent.get_price(end_date) 
+            price = rent.get_price(end_date)
             self.total_price.append(price)
-            
         else:
 
-            raise ValueError("Invalid ID") 
+            raise ValueError("Invalid ID")
         return self.total_price
-
-
 
     def get_promotion_price(self):
         """
-        Suma todos los arriendos de la promocion y agrega el descuento correspondiente 
+        Suma todos los arriendos de la promocion y
+        agrega el descuento correspondiente
         """
         if len(self.rent_list) < 3:
 
@@ -296,7 +295,7 @@ class FamilyRental(BikeRental):
 
         else:
 
-            if self._has_non_returned_bikes(): 
+            if self._has_non_returned_bikes():
                 total_price = sum(self.total_price)
 
             else:
@@ -304,7 +303,7 @@ class FamilyRental(BikeRental):
                 raise ValueError("This promotion has no returned bikes")
         promotion_price = total_price - (total_price * self.__class__.DISCOUNT)
         return promotion_price
-    
+
     def get_total_price(self):
 
         return sum(self.total_price)
@@ -315,8 +314,6 @@ class FamilyRental(BikeRental):
         """
         for item in self.rent_list:
             if item.price == 0:
-                return False  
+                return False
 
         return True
-
-
