@@ -12,7 +12,7 @@ class TestBikeRental(unittest.TestCase):
         type_ = "hours"
 
         bike_rental = BikeRental()
-        
+
         new_rent = bike_rental.rent(client, type_)
 
 
@@ -22,7 +22,7 @@ class TestBikeRental(unittest.TestCase):
         self.assertEqual(new_rent.type, "hours")
         self.assertEqual(new_rent.get_price, new_rent._get_total_hours_price)
         self.assertEqual(new_rent.price, 0)
-        # self.assertEqual(new_rent.total_rented, 1)
+
 
     def test_bike_rental_by_day(self):
 
@@ -44,6 +44,7 @@ class TestBikeRental(unittest.TestCase):
         self.assertEqual(new_rent.usetime, 2)
         self.assertEqual(new_rent.start_date, start_date)
 
+
     def test_bike_rental_by_day_one_minute_left(self):
 
         client = "Raul"
@@ -60,6 +61,7 @@ class TestBikeRental(unittest.TestCase):
         total_price = new_rent.get_price(end_date)
 
         self.assertEqual(total_price, 20)
+
 
 
     def test_bike_rental_by_hour(self):
@@ -79,6 +81,7 @@ class TestBikeRental(unittest.TestCase):
 
         self.assertEqual(usetime, 3)
         self.assertEqual(total_price, 15)
+
 
 
     def test_bike_rental_by_hour_one_minute_pass(self):
@@ -101,6 +104,7 @@ class TestBikeRental(unittest.TestCase):
 
 
 
+
     def test_bike_rental_by_week(self):
 
         client = 'Carlos'
@@ -118,6 +122,7 @@ class TestBikeRental(unittest.TestCase):
 
         self.assertEqual(usetime, 1)
         self.assertEqual(total_price, 60)
+
 
 
     def test_bike_rental_by_week_one_minute_pass(self):
@@ -139,6 +144,53 @@ class TestBikeRental(unittest.TestCase):
         self.assertEqual(total_price, 120)
 
 
+
+    def test_errors(self):
+
+        bike_rental = BikeRental()
+
+        with self.assertRaises(ValueError) as context:
+            family_rent = bike_rental.family_rent("Alberto", "Hermano")
+            self.assertTrue('Invalid family_member format' in context.exception)
+
+            miguel_rent = bike_rental.rent("Miguel", "minutes")
+            self.assertTrue('Invalid type' in context.exception)
+
+        
+            alberto_rent = bike_rental.rent("Alberto","hours", "2019-03-20")
+            self.assertTrue('Start time has to be datetime instance' in context.exception)
+
+            olga_rent= bike_rental.rent("Olga", "days")
+            carlos_rent= bike_rental.rent("Carlos", "hours")
+            sonia_rent = bike_rental.rent("Sonia", "weeks")
+            
+
+            end_date = datetime.datetime(2019, 3, 10, 2, 31)
+
+            olga_rent.get_price("2019-4-10")
+            self.assertTrue('Return date must be a datetime object' in context.exception)
+
+            carlos_rent.get_price("2019-4-10")
+            self.assertTrue('Return date must be a datetime object' in context.exception)
+
+            sonia_rent.get_price("2019-4-10")
+            self.assertTrue('Return date must be a datetime object' in context.exception)
+
+        with self.assertRaises(ValueError) as context:
+            day_rent =  bike_rental.rent("Raul", "days")
+            day_rent.get_price()
+            self.assertTrue('Must enter return date' in context.exception)
+
+            hour_rent = bike_rental.rent("Raul", "hours")
+            hour_rent.get_price()
+            self.assertTrue('Must enter return date' in context.exception)
+
+            week_rent = bike_rental.rent("Raul", "weeks")
+            week_rent.get_price()
+            self.assertTrue('Must enter return date' in context.exception)
+
+
+       
 
 class TestFamilyRental(unittest.TestCase):
 
@@ -268,11 +320,13 @@ class TestFamilyRental(unittest.TestCase):
         self.assertEqual(alberto_rent.price, 600)
 
 
-        expected_total_price = (alberto_rent.price + 
-        					argenis_rent.price + 
-        					olga_rent.price +
-        					carlos_rent.price
-        					)
+        expected_total_price = (
+            alberto_rent.price + 
+            argenis_rent.price + 
+            olga_rent.price +
+            carlos_rent.price
+            )
+
         expeced_promotion_price = expected_total_price - (expected_total_price * 0.3)
 
         self.assertEqual(family_rent.get_total_price(), expected_total_price)
@@ -291,12 +345,72 @@ class TestFamilyRental(unittest.TestCase):
             family_rent.return_bike(invalid_rent, end_date)
             self.assertTrue("Invalid ID" in context.exception)
 
+
+
         alberto2_rent = family_rent.return_bike(alberto2_rent, end_date)
 
         # Test more than five rents error
         with self.assertRaises(ValueError) as context:
             family_rent.rent("Invalid", "hours")
             self.assertTrue("Not more rents available" in context.exception)
+
+    def test_append_family_member(self):
+
+        representant = "Alberto"
+        family_members = [
+            ("Carlos", "brother"),
+            ("Olga", "mother"),
+            ("Argenis", "father")
+
+        ]
+
+        bike_rental = BikeRental()
+
+        family_rent = bike_rental.family_rent(representant, family_members)
+
+        family_rent.append_family("Juan", "grandfather")
+
+        expected = [
+            ("Carlos", "brother"),
+            ("Olga", "mother"),
+            ("Argenis", "father"),
+            ("Juan", "grandfather")
+
+        ]
+
+        self.assertEqual(family_rent.family_members, expected)
+
+    def test_return_bike_errors(self):
+
+        representant = "Alberto"
+        family_members = [
+            ("Carlos", "brother"),
+            ("Olga", "mother"),
+            ("Argenis", "father")
+
+        ]
+
+        bike_rental = BikeRental()
+
+        family_rent = bike_rental.family_rent(representant, family_members)
+
+
+        with self.assertRaises(ValueError) as context:
+            brother_rent = family_rent.rent("Carlossss", "hours")
+
+            self.assertTrue('Invalid Member' in context.exception)
+
+            invalid_rent = family_rent.rent("Carlos", "hours")
+            price_list = family_rent.return_bike(invalid_rent)
+            self.assertTrue('Must enter return date' in context.exception)
+
+            price_list = family_rent.return_bike(invalid_rent,"2019-03-20")
+            self.assertTrue('Return date must be a datetime object' in context.exception)
+
+
+
+
+
 
 
 

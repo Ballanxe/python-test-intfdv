@@ -163,7 +163,7 @@ class Rent(BikeRental):
         Retorna el precio si el tipo de arrendamiento es por hora
         """
 
-        if not end_date:
+        if end_date == None:
 
             raise ValueError("Must enter return date")
 
@@ -185,8 +185,8 @@ class Rent(BikeRental):
         """
         Retorna el precio si el tipo de arrendamiento es por dia
         """
-
-        if not end_date:
+        # print(end_date)
+        if end_date == None:
 
             raise ValueError("Must enter return date")
 
@@ -211,7 +211,7 @@ class Rent(BikeRental):
         Retorna el precio si el tipo de arrendamiento es por semana
         """
 
-        if not end_date:
+        if end_date == None:
 
             raise ValueError("Must enter return date")
 
@@ -284,6 +284,7 @@ class FamilyRental(BikeRental):
 
 
     allowed_relations = ["daugther", "son", "husband", "wife", "grandchildren", "grandfather", "uncle"]
+
     DISCOUNT = 0.3
 
 
@@ -306,8 +307,6 @@ class FamilyRental(BikeRental):
 
         return "<{}, {}>".format(self.__class__.__name__,self.rent_list.__repr__)
 
-    # def 
-
 
     def rent(self, member, type, start_date=None):
 
@@ -324,6 +323,8 @@ class FamilyRental(BikeRental):
             new_rent = Rent(client=member, type=type, start_date=start_date)
 
             self.rent_list.append(new_rent)
+            BikeRental.total_number_of_rents += 1
+
 
         return new_rent
 
@@ -332,10 +333,6 @@ class FamilyRental(BikeRental):
         Valida que el miembro que solicita el arrendamiento pertenece a la lista
         de parientes del representante
         """
-
-        if len(self.family_members) == 0:
-
-            raise ValueError("This rent does not have representant")
 
         if member == self.representant:
 
@@ -363,7 +360,7 @@ class FamilyRental(BikeRental):
 
         """
 
-        if not end_date:
+        if end_date == None:
 
             raise ValueError("Must enter return date")
 
