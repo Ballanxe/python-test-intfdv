@@ -14,7 +14,7 @@ class BikeRental:
 
     def rent(self, name=None, type=None, date=None):
         """
-        Renta un bicicleta con base a las propiedades de la clase
+        Renta un bicicleta con base en las propiedades de la clase
         """
         rent = Rent(name, type, date)
         self.__class__.total_number_of_rents += 1
@@ -123,6 +123,9 @@ class Rent(BikeRental):
         """
         Retorna el precio si el tipo de arrendamiento es por hora
         """
+        if not self._validate_end_date(end_date):
+
+            raise ValueError("Invalid return date")
         if end_date is None:
 
             raise ValueError("Must enter return date")
@@ -140,6 +143,9 @@ class Rent(BikeRental):
         """
         Retorna el precio si el tipo de arrendamiento es por dia
         """
+        if not self._validate_end_date(end_date):
+
+            raise ValueError("Invalid return date")
         if end_date is None:
 
             raise ValueError("Must enter return date")
@@ -162,10 +168,20 @@ class Rent(BikeRental):
         if not isinstance(end_date, datetime.datetime):
 
             raise ValueError("Return date must be a datetime object")
+        if not self._validate_end_date(end_date):
+
+            raise ValueError("Invalid return date")
         total_time = end_date - self.start_date
         self.usetime = self._get_weeks(total_time.total_seconds())
         self.price = self.usetime * self.week_price
         return self.price
+
+    def _validate_end_date(self, end_date):
+
+        if end_date:
+
+            return end_date > self.start_date
+        return False
 
     def _get_days(self, seconds):
         """
@@ -310,7 +326,7 @@ class FamilyRental(BikeRental):
 
     def _has_non_returned_bikes(self):
         """
-        Verifica que la promosion no tenga bicicletas sin devolver
+        Verifica que la promocion no tenga bicicletas sin devolver
         """
         for item in self.rent_list:
             if item.price == 0:

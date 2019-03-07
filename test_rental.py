@@ -131,6 +131,23 @@ class TestBikeRental(unittest.TestCase):
             week_rent.get_price()
             self.assertTrue('Must enter return date' in context.exception)
 
+        with self.assertRaises(ValueError) as context:
+            invalid_end_price = datetime.datetime(2018, 1, 1)
+            d_rent = bike_rental.rent("Raul", "days")
+
+            h_rent = bike_rental.rent("Raul", "hours")
+
+            w_rent = bike_rental.rent("Raul", "weeks")
+            d_rent.get_price(invalid_end_price)
+            self.assertTrue('Invalid return date' in
+                            context.exception)
+            h_rent.get_price(invalid_end_price)
+            self.assertTrue('Invalid return date' in
+                            context.exception)
+            w_rent.get_price(invalid_end_price)
+            self.assertTrue('Invalid return date' in
+                            context.exception)
+
 
 class TestFamilyRental(unittest.TestCase):
 
@@ -208,6 +225,7 @@ class TestFamilyRental(unittest.TestCase):
         self.assertEqual(olga_rent.price, 10)
         # Trying to get discount with less than three rents
         with self.assertRaises(ValueError) as context:
+
             family_rent.get_promotion_price()
             self.assertTrue('You need at least 3 rents to get discount' in
                             context.exception)
@@ -223,6 +241,7 @@ class TestFamilyRental(unittest.TestCase):
         alberto_rent = family_rent.rent("Alberto", "weeks")
         # Trying to get discount with no returned bikes
         with self.assertRaises(ValueError) as context:
+
             family_rent.get_promotion_price()
             self.assertTrue('This promotion has no returned bikes' in
                             context.exception)
@@ -249,12 +268,14 @@ class TestFamilyRental(unittest.TestCase):
         # that does not belong to this promotion
         invalid_rent = bike_rental.rent("Invalid", "hours")
         with self.assertRaises(ValueError) as context:
+
             family_rent.return_bike(invalid_rent, end_date)
             self.assertTrue("Invalid ID" in context.exception)
         alberto2_rent = family_rent.return_bike(alberto2_rent, end_date)
 
         # Test more than five rents error
         with self.assertRaises(ValueError) as context:
+
             family_rent.rent("Invalid", "hours")
             self.assertTrue("Not more rents available" in context.exception)
 
