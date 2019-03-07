@@ -26,6 +26,11 @@
 
 
 ```bash
-coverage run --source="rental" -m pytest test_rental.py
-coverage report
+$ coverage run --source="rental" -m pytest test_rental.py
+$ coverage report
+```
+4. Ejecutar flake8 para validar cumplimiento de PEP8
+
+```bash
+$ flake8
 ```
